@@ -1,0 +1,9 @@
+[preset]
+name: SpectrumEffect
+
+[effect]
+shader: spectrum.vfp
+
+[param]
+screen_width: 640.0
+screen_height: 480.0

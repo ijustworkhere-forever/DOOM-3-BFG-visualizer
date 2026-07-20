@@ -1,0 +1,101 @@
+// Visualizer warp - pixel stage. Samples the feedback texture at a warped
+// texcoord. The warp parameters ride in on the vertex COLOR (the one channel the
+// 2D overlay path reliably sets via renderSystem->SetColor), so the warp is
+// animated + audio-reactive without needing custom render-parm plumbing:
+//   color.r = warp amount        color.g = phase (0..1 -> 0..2pi)
+//   color.b = mode  (0..1 selects ripple/swirl/tunnel/fisheye)
+//   color.a = dim   (feedback decay / brightness)
+//
+// After the base warped texcoord is computed, the feedback is sampled with a
+// 6-tap kernel that folds together two effects (kept subtle and driven by
+// `amount`, so both vanish gracefully as amount -> 0):
+//   MULTI-TAP BLUR : each color channel is averaged from a pair of taps spread
+//     tangentially (perpendicular to the radial direction) by `blurRad`, giving
+//     the feedback a soft glow that grows with the warp amount.
+//   CHROMA-SPLIT   : the red pair is sampled pushed OUTWARD along the radial
+//     direction from center (0.5,0.5) and the blue pair pushed INWARD by
+//     `chroma`, for an RGB-fringe look whose spread scales with the warp amount.
+// Radial direction is taken from the warped coord relative to center; when
+// amount is ~0 all 6 taps collapse onto `warped` and the result is a clean,
+// unblurred, un-fringed sample. Total texture taps: 6.
+
+#include "global.inc"
+
+uniform sampler2D samp0 : register(s0);
+
+struct PS_IN {
+	float4 position : VPOS;
+	float2 texcoord0 : TEXCOORD0_centroid;
+	float4 texcoord1 : TEXCOORD1_centroid;
+	float4 color : COLOR0;
+};
+
+struct PS_OUT {
+	float4 color : COLOR;
+};
+
+void main( PS_IN fragment, out PS_OUT result ) {
+	float amount = fragment.color.r * 0.5;
+	float phase  = fragment.color.g * 6.28318;
+	float modef  = fragment.color.b;
+	float dim    = fragment.color.a;
+
+	float2 c = fragment.texcoord0 - 0.5;
+	float r = length( c );
+	float2 warped;
+
+	// Warp strengths are boosted so the shader reads as strongly as the mesh warp
+	// (the previous multipliers were visually too subtle).
+	if ( modef < 0.30 ) {
+		// ripple - radial displacement
+		float ripple = 1.0 + amount * 2.2 * sin( r * 24.0 - phase );
+		warped = c * ripple + 0.5;
+	} else if ( modef < 0.55 ) {
+		// swirl - rotate by an angle that decays with radius
+		float ang = amount * 16.0 * ( 0.6 - min( r, 0.6 ) ) + amount * 2.0 * sin( r * 20.0 - phase );
+		float sn = sin( ang );
+		float cs = cos( ang );
+		warped = float2( c.x * cs - c.y * sn, c.x * sn + c.y * cs ) + 0.5;
+	} else if ( modef < 0.80 ) {
+		// tunnel - nonlinear radius remap
+		float rr = pow( r, 1.0 + amount * 6.0 );
+		float scale = ( r > 0.001 ) ? ( rr / r ) : 1.0;
+		warped = c * scale + 0.5;
+	} else {
+		// fisheye - barrel distortion
+		warped = c * ( 1.0 + amount * 7.0 * ( r * r - 0.12 ) ) + 0.5;
+	}
+
+	// Blur radius and chroma spread both grow with the warp amount and vanish
+	// at amount ~0 (offsets stay on the order of 0.002..0.01 texcoord units).
+	float blurRad = amount * 0.016;		// tangential glow spread
+	float chroma  = amount * 0.020;		// radial R/B fringe spread
+
+	// Radial direction of the warped sample away from the screen center. Guard
+	// the near-center singularity so normalization stays well-defined.
+	float2 wc = warped - 0.5;
+	float wr = length( wc );
+	float2 dir = ( wr > 0.001 ) ? ( wc / wr ) : float2( 1.0, 0.0 );
+	float2 perp = float2( -dir.y, dir.x );
+
+	float2 radial = dir * chroma;		// push R out / B in along this
+	float2 tang   = perp * blurRad;		// blur pairs spread along this
+
+	// 6 taps: two per channel. Red pushed outward, blue pushed inward, green at
+	// the warped coord; each channel averaged over a tangential pair for blur.
+	float4 rA = tex2D( samp0, warped + radial + tang );
+	float4 rB = tex2D( samp0, warped + radial - tang );
+	float4 gA = tex2D( samp0, warped + tang );
+	float4 gB = tex2D( samp0, warped - tang );
+	float4 bA = tex2D( samp0, warped - radial + tang );
+	float4 bB = tex2D( samp0, warped - radial - tang );
+
+	float3 rgb;
+	rgb.x = ( rA.x + rB.x ) * 0.5;
+	rgb.y = ( gA.y + gB.y ) * 0.5;
+	rgb.z = ( bA.z + bB.z ) * 0.5;
+	float alpha = ( gA.w + gB.w ) * 0.5;
+
+	result.color.xyz = rgb * dim;
+	result.color.w = alpha * dim;
+}

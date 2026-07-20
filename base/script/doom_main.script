@@ -1,0 +1,7 @@
+/*
+Minimal doom_main.script for dataless visualizer boot (SCRIPT_DEFAULT).
+doom_main() is spawned as the map's main thread (SCRIPT_DEFAULTFUNC).
+*/
+
+void doom_main() {
+}

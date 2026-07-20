@@ -1,0 +1,18 @@
+[preset]
+name: Test MilkDrop
+
+[effect]
+vertex_shader:
+void main() {
+    gl_Position = vec4(vertex.attrib[8], 1.0);
+}
+END
+fragment_shader:
+void main() {
+    float rms = param 400;
+    gl_FragColor = vec4(rms, 0.5, 1.0 - rms, 1.0);
+}
+END
+
+[param]
+param 400: 0.5

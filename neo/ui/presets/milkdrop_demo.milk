@@ -1,0 +1,31 @@
+[preset]
+name: MilkDrop Demo
+
+[effect]
+vertex_shader:
+void main() {
+    vec4 pos = vertex.attrib[8];
+    float rms = param 400;
+    pos.x += sin(pos.y * 10.0 + rms * 5.0) * 0.1 * rms;
+    pos.y += cos(pos.x * 10.0 + rms * 5.0) * 0.1 * rms;
+    gl_Position = pos;
+}
+END
+fragment_shader:
+void main() {
+    float rms = param 400;
+    float freq0 = param 401;
+    float freq1 = param 402;
+
+    vec3 color = vec3(rms, freq0, freq1);
+    gl_FragColor = vec4(color, 1.0);
+}
+END
+
+[param]
+param 0: 1.0
+param 1: 0.0
+param 2: 0.0
+param 400: 0.0
+param 401: 0.0
+param 402: 0.0

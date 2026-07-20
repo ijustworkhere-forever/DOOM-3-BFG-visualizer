@@ -1,0 +1,11 @@
+vertex.normal
+void main() {
+    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+}
+END
+fragment.normal
+uniform float rpUser10[257];
+void main() {
+    gl_FragColor = vec4(rpUser10[0], 0.0, 0.0, 1.0);
+}
+END

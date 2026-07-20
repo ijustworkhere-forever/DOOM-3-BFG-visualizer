@@ -1,0 +1,18 @@
+[preset]
+name: High Param Test
+
+[effect]
+vertex_shader:
+void main() {
+    gl_Position = vertex.attrib[8];
+}
+END
+fragment_shader:
+void main() {
+    float val = param 400;
+    gl_FragColor = vec4(val, val, val, 1.0);
+}
+END
+
+[param]
+param 400: 0.75

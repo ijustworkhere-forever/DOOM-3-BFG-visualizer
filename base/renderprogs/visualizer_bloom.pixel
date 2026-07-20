@@ -1,0 +1,59 @@
+// Visualizer bloom - pixel stage. Samples the captured composite (samp0 =
+// visualizer/bloomrt), keeps only what's above a brightness threshold, blurs it
+// with a 13-tap two-ring kernel, and outputs the glow. The material stage uses
+// additive blend, so this color is ADDED over the frame -> soft neon bloom.
+// Params ride in on the vertex color:
+//   color.r = intensity   color.g = threshold   color.b = blur radius scale
+// (brightPass inlined - no sampler-as-function-arg, which the translator dislikes)
+
+#include "global.inc"
+
+uniform sampler2D samp0 : register(s0);
+
+struct PS_IN {
+	float4 position : VPOS;
+	float2 texcoord0 : TEXCOORD0_centroid;
+	float4 texcoord1 : TEXCOORD1_centroid;
+	float4 color : COLOR0;
+};
+
+struct PS_OUT {
+	float4 color : COLOR;
+};
+
+void main( PS_IN fragment, out PS_OUT result ) {
+	float intensity = fragment.color.r * 3.0;
+	float thr = fragment.color.g;
+	float rad = fragment.color.b * 0.03;
+	float2 uv = fragment.texcoord0;
+	float r2 = rad * 2.0;
+	float3 zero = float3( 0.0, 0.0, 0.0 );
+	float3 t = float3( thr, thr, thr );
+
+	float3 sum = max( tex2D( samp0, uv ).rgb - t, zero ) * 4.0;
+
+	sum += max( tex2D( samp0, uv + float2(  rad,  0.0 ) ).rgb - t, zero ) * 2.0;
+	sum += max( tex2D( samp0, uv + float2( -rad,  0.0 ) ).rgb - t, zero ) * 2.0;
+	sum += max( tex2D( samp0, uv + float2(  0.0,  rad ) ).rgb - t, zero ) * 2.0;
+	sum += max( tex2D( samp0, uv + float2(  0.0, -rad ) ).rgb - t, zero ) * 2.0;
+	sum += max( tex2D( samp0, uv + float2(  rad,  rad ) ).rgb - t, zero ) * 1.5;
+	sum += max( tex2D( samp0, uv + float2( -rad,  rad ) ).rgb - t, zero ) * 1.5;
+	sum += max( tex2D( samp0, uv + float2(  rad, -rad ) ).rgb - t, zero ) * 1.5;
+	sum += max( tex2D( samp0, uv + float2( -rad, -rad ) ).rgb - t, zero ) * 1.5;
+
+	sum += max( tex2D( samp0, uv + float2(  r2,  0.0 ) ).rgb - t, zero ) * 1.0;
+	sum += max( tex2D( samp0, uv + float2( -r2,  0.0 ) ).rgb - t, zero ) * 1.0;
+	sum += max( tex2D( samp0, uv + float2(  0.0,  r2 ) ).rgb - t, zero ) * 1.0;
+	sum += max( tex2D( samp0, uv + float2(  0.0, -r2 ) ).rgb - t, zero ) * 1.0;
+
+	// total weight = 4 + (2*4 + 1.5*4) + 4 = 22
+	// Fixed real bug: this had no output clamp, and neither does the
+	// feedback trail it usually samples from (see the ping-pong render
+	// targets' FMT_RGBA16F comment in RenderSystem.cpp) -- additive glow
+	// on top of an already->1.0 trail sample, times up to 3x intensity,
+	// compounds frame over frame (the trail's own decay is far slower than
+	// this can regrow it) until the screen washes to solid white. Bloom's
+	// own contribution is now bounded to [0,1] regardless of intensity.
+	result.color.xyz = saturate( ( sum / 22.0 ) * intensity );
+	result.color.w = 1.0;
+}

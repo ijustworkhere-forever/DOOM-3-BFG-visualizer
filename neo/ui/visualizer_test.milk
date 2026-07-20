@@ -1,0 +1,24 @@
+[preset]
+name: Complex Test
+
+[effect]
+vertex_shader:
+void main() {
+    vec4 pos = vertex.attrib[8];
+    pos.x += sin(param 0 * 10.0);
+    pos.y += cos(param 1 * 10.0);
+    gl_Position = pos;
+}
+END
+fragment_shader:
+void main() {
+    float brightness = param 2;
+    gl_FragColor = vec4(brightness, 0.0, 0.0, 1.0);
+}
+END
+
+[param]
+param 0: 0.1
+param 1: 0.2
+param 2: 0.3
+param 3: 0.4

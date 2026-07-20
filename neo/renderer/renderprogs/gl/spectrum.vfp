@@ -1,0 +1,16 @@
+vertex.normal
+void main() {
+    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+}
+END
+fragment.normal
+uniform float rpUser100[257];
+uniform float screen_width;
+uniform float screen_height;
+void main() {
+    float x = gl_FragCoord.x / screen_width;
+    int bin = int(x * 256.0);
+    float val = rpUser100[bin];
+    gl_FragColor = vec4(val, val, val, 1.0);
+}
+END

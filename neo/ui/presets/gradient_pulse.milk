@@ -1,0 +1,18 @@
+[preset]
+name: Gradient Pulse
+
+[effect]
+vertex_shader:
+void main() {
+    gl_Position = vec4(vertex.attrib[8], 1.0);
+}
+END
+fragment_shader:
+void main() {
+    float pulse = param 400;
+    gl_FragColor = vec4(pulse, 1.0 - pulse, 0.5, 1.0);
+}
+END
+
+[param]
+param 400: 0.2

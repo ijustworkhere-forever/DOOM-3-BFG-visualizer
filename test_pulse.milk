@@ -1,0 +1,8 @@
+[preset]
+name: PulseEffect
+
+[effect]
+shader: pulse.vfp
+
+[param]
+intensity: 1.0

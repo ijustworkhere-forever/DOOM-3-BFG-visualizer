@@ -1,0 +1,19 @@
+[preset]
+name: Pulsing Red
+
+[effect]
+vertex_shader:
+void main() {
+    gl_Position = vertex.attrib[8];
+}
+END
+fragment_shader:
+void main() {
+    float pulse = sin(param 0 * 6.28) * 0.5 + 0.5;
+    gl_FragColor = vec4(pulse, 0.0, 0.0, 1.0);
+}
+END
+
+[param]
+param 0: 1.0
+param 1: 0.5

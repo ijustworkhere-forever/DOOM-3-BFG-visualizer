@@ -1,0 +1,21 @@
+[preset]
+name: Spectrum Bloom
+
+[effect]
+vertex_shader:
+void main() {
+    gl_Position = vertex.attrib[8];
+}
+END
+fragment_shader:
+void main() {
+    float spec = param 0;
+    float hue = param 1;
+    gl_FragColor = vec4(spec * cos(hue), spec * sin(hue), 1.0, 1.0);
+}
+END
+
+[param]
+param 0: 0.5
+param 1: 1.0
+param 2: 0.0

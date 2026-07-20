@@ -1,0 +1,19 @@
+[preset]
+name: Test Preset
+
+[effect]
+vertex_shader:
+void main() {
+    gl_Position = vec4(0.0);
+}
+END
+fragment_shader:
+void main() {
+    gl_FragColor = vec4(1.0);
+}
+END
+
+[param]
+param 0: 0.5
+param 1: 0.25
+param 2: 0.1

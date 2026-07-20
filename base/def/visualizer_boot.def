@@ -1,0 +1,5 @@
+// Minimal entityDefs for dataless visualizer boot.
+// idGameLocal::Init errors without an 'aas_types' entityDef; an empty one
+// simply yields zero AAS navmesh types, which is correct for the visualizer.
+entityDef aas_types {
+}

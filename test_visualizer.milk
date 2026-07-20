@@ -1,0 +1,10 @@
+[preset]
+name: TestPreset
+
+[effect]
+vertex_shader: test_visualizer.vfp
+fragment_shader: test_visualizer.vfp
+
+[param]
+param1: 0.5
+param2: 1.0

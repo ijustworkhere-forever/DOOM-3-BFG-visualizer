@@ -1,0 +1,406 @@
+// Generated boot materials for running without retail game data.
+// _default is REQUIRED: R_InitMaterials fatals if the decl is missing
+// (the _default image itself is intrinsic). textures/bigchars drives all
+// console text (renderSystem Draw*String*).
+
+_default {
+	{
+		map		_default
+	}
+}
+
+// NOTE: do NOT declare _white here. The engine auto-generates the _white
+// material from the intrinsic _white image; a hand-written decl (esp. without
+// 'blend') overrides it and breaks DrawFilled (all solid quads render nothing).
+
+// Proper 2D GUI solid material: a real white TGA (NOT the intrinsic _white,
+// which leaves the stage without a GUI shader program and crashes on render) +
+// alpha blend + vertexColor. Mirrors the working bigchars material exactly.
+// The visualizer draws all bars/panels with this.
+visualizer/solid {
+	{
+		blend	blend
+		map		textures/visualizer_white.tga
+		vertexColor
+	}
+}
+
+// PRD M5: additive-blend variant of visualizer/solid, for wavecode_N_bAdditive
+// waves (real MilkDrop draws those with additive glow rather than normal
+// alpha blend).
+visualizer/solidAdditive {
+	{
+		blend	add
+		map		textures/visualizer_white.tga
+		vertexColor
+	}
+}
+
+// PRD follow-up (direct user report: "we need blend modes for the map
+// flythrough layer ... background could darken and wireframe could
+// lighten"). Full VISBLEND_* set for a plain solid-color fill, same shape
+// as the layerSlot0-3 per-blend-mode variants further below -- used by the
+// map-flythrough background fill (VisFillRectBlend).
+visualizer/solidSubtract {
+	{
+		blend	subtract
+		map		textures/visualizer_white.tga
+		vertexColor
+	}
+}
+visualizer/solidMultiply {
+	{
+		blend	filter
+		map		textures/visualizer_white.tga
+		vertexColor
+	}
+}
+visualizer/solidScreen {
+	{
+		blend	screen
+		map		textures/visualizer_white.tga
+		vertexColor
+	}
+}
+visualizer/solidDarken {
+	{
+		blend	darken
+		map		textures/visualizer_white.tga
+		vertexColor
+	}
+}
+visualizer/solidLighten {
+	{
+		blend	lighten
+		map		textures/visualizer_white.tga
+		vertexColor
+	}
+}
+visualizer/solidInvert {
+	{
+		blend	invert
+		map		textures/visualizer_white.tga
+		vertexColor
+	}
+}
+
+// Feedback material: samples the captured previous-frame image (written each
+// frame by CaptureRenderToImage("visualizer/feedbackrt")). Drawing this back
+// zoomed + dimmed produces the MilkDrop-style warp/trail. bilinear filtered.
+visualizer/feedback {
+	{
+		blend	blend
+		map		visualizer/feedbackrt
+		vertexColor
+	}
+}
+
+// PRD M1 step 8: ping-pong feedback pair, each sampling one side of the
+// full-precision (FMT_RGBA16F) offscreen render targets that
+// idRenderSystem::BeginOffscreenRender/EndOffscreenRender fill directly (no
+// CopyFramebuffer read-back, so no 8-bit re-quantization) -- fixes the
+// banding "visualizer/feedback" above can't, since its image is always
+// filled via CaptureRenderToImage's hardcoded qglReadBuffer(GL_BACK). Same
+// blend/vertexColor body as visualizer/feedback for identical visual
+// behavior; only the sampled image differs.
+visualizer/feedbackA {
+	{
+		blend	blend
+		map		visualizer/feedbackrtA
+		vertexColor
+	}
+}
+
+visualizer/feedbackB {
+	{
+		blend	blend
+		map		visualizer/feedbackrtB
+		vertexColor
+	}
+}
+
+// Fragment-shader warp spike: a stage with a custom GLSL program
+// (base/renderprogs/visualizer_warp.vertex/.pixel). fragmentMap 0 binds the
+// captured feedback frame to samp0. Drawn as one fullscreen quad when vis_warp 3.
+// If the 2D overlay path honors the custom program, the feedback shows up
+// barrel-distorted; if not, it renders as plain feedback (non-breaking).
+visualizer/warp {
+	{
+		vertexProgram	visualizer_warp
+		fragmentProgram	visualizer_warp
+		fragmentMap 0	visualizer/feedbackrt
+		vertexColor
+	}
+}
+
+// Bloom post-process: samples the captured composite (visualizer/bloomrt),
+// bright-passes + blurs it, and ADDS the glow over the frame (blend add). Drawn
+// as one fullscreen quad when vis_bloom > 0.
+visualizer/bloom {
+	{
+		blend add
+		vertexProgram	visualizer_bloom
+		fragmentProgram	visualizer_bloom
+		fragmentMap 0	visualizer/bloomrt
+		vertexColor
+	}
+}
+
+// PRD Pillar C real add/remove layer stack: one material per (slot, blend
+// mode) pair, sampling that slot's own runtime-captured image
+// (_visLayerSlotN, registered via VisRegisterLayerStackRTGenerators and
+// filled each frame by BeginOffscreenRender/EndOffscreenRender in
+// VisRenderLayerStack). Expanded from just normal/additive (direct user
+// report: "the zge layers only have additive but need all the modes,
+// additive, subtractive, inverse and the rest") to the full set the
+// Material.cpp "blend" keyword now supports: blend (normal alpha),
+// add (additive), subtract (reverse-subtractive), filter (multiply),
+// screen, darken (min), lighten (max), invert.
+visualizer/layerSlot0 {
+	{
+		blend	blend
+		map		_visLayerSlot0
+		vertexColor
+	}
+}
+visualizer/layerSlot0Add {
+	{
+		blend	add
+		map		_visLayerSlot0
+		vertexColor
+	}
+}
+visualizer/layerSlot0Subtract {
+	{
+		blend	subtract
+		map		_visLayerSlot0
+		vertexColor
+	}
+}
+visualizer/layerSlot0Multiply {
+	{
+		blend	filter
+		map		_visLayerSlot0
+		vertexColor
+	}
+}
+visualizer/layerSlot0Screen {
+	{
+		blend	screen
+		map		_visLayerSlot0
+		vertexColor
+	}
+}
+visualizer/layerSlot0Darken {
+	{
+		blend	darken
+		map		_visLayerSlot0
+		vertexColor
+	}
+}
+visualizer/layerSlot0Lighten {
+	{
+		blend	lighten
+		map		_visLayerSlot0
+		vertexColor
+	}
+}
+visualizer/layerSlot0Invert {
+	{
+		blend	invert
+		map		_visLayerSlot0
+		vertexColor
+	}
+}
+visualizer/layerSlot1 {
+	{
+		blend	blend
+		map		_visLayerSlot1
+		vertexColor
+	}
+}
+visualizer/layerSlot1Add {
+	{
+		blend	add
+		map		_visLayerSlot1
+		vertexColor
+	}
+}
+visualizer/layerSlot1Subtract {
+	{
+		blend	subtract
+		map		_visLayerSlot1
+		vertexColor
+	}
+}
+visualizer/layerSlot1Multiply {
+	{
+		blend	filter
+		map		_visLayerSlot1
+		vertexColor
+	}
+}
+visualizer/layerSlot1Screen {
+	{
+		blend	screen
+		map		_visLayerSlot1
+		vertexColor
+	}
+}
+visualizer/layerSlot1Darken {
+	{
+		blend	darken
+		map		_visLayerSlot1
+		vertexColor
+	}
+}
+visualizer/layerSlot1Lighten {
+	{
+		blend	lighten
+		map		_visLayerSlot1
+		vertexColor
+	}
+}
+visualizer/layerSlot1Invert {
+	{
+		blend	invert
+		map		_visLayerSlot1
+		vertexColor
+	}
+}
+visualizer/layerSlot2 {
+	{
+		blend	blend
+		map		_visLayerSlot2
+		vertexColor
+	}
+}
+visualizer/layerSlot2Add {
+	{
+		blend	add
+		map		_visLayerSlot2
+		vertexColor
+	}
+}
+visualizer/layerSlot2Subtract {
+	{
+		blend	subtract
+		map		_visLayerSlot2
+		vertexColor
+	}
+}
+visualizer/layerSlot2Multiply {
+	{
+		blend	filter
+		map		_visLayerSlot2
+		vertexColor
+	}
+}
+visualizer/layerSlot2Screen {
+	{
+		blend	screen
+		map		_visLayerSlot2
+		vertexColor
+	}
+}
+visualizer/layerSlot2Darken {
+	{
+		blend	darken
+		map		_visLayerSlot2
+		vertexColor
+	}
+}
+visualizer/layerSlot2Lighten {
+	{
+		blend	lighten
+		map		_visLayerSlot2
+		vertexColor
+	}
+}
+visualizer/layerSlot2Invert {
+	{
+		blend	invert
+		map		_visLayerSlot2
+		vertexColor
+	}
+}
+visualizer/layerSlot3 {
+	{
+		blend	blend
+		map		_visLayerSlot3
+		vertexColor
+	}
+}
+visualizer/layerSlot3Add {
+	{
+		blend	add
+		map		_visLayerSlot3
+		vertexColor
+	}
+}
+visualizer/layerSlot3Subtract {
+	{
+		blend	subtract
+		map		_visLayerSlot3
+		vertexColor
+	}
+}
+visualizer/layerSlot3Multiply {
+	{
+		blend	filter
+		map		_visLayerSlot3
+		vertexColor
+	}
+}
+visualizer/layerSlot3Screen {
+	{
+		blend	screen
+		map		_visLayerSlot3
+		vertexColor
+	}
+}
+visualizer/layerSlot3Darken {
+	{
+		blend	darken
+		map		_visLayerSlot3
+		vertexColor
+	}
+}
+visualizer/layerSlot3Lighten {
+	{
+		blend	lighten
+		map		_visLayerSlot3
+		vertexColor
+	}
+}
+visualizer/layerSlot3Invert {
+	{
+		blend	invert
+		map		_visLayerSlot3
+		vertexColor
+	}
+}
+
+textures/bigchars {
+	{
+		blend	blend
+		map		textures/bigchars.tga
+		vertexColor
+	}
+}
+
+newfonts/Arial_Narrow/48.tga {
+	{
+		blend	blend
+		map		newfonts/Arial_Narrow/48.tga
+		vertexColor
+	}
+}
+
+guiSolid {
+	{
+		blend	blend
+		map		_white
+		vertexColor
+	}
+}

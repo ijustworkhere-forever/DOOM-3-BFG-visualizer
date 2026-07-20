@@ -1,0 +1,40 @@
+# Visual Studio
+.vs/
+*.VC.db
+*.opendb
+*.suo
+*.user
+
+# Build outputs
+build/
+[Bb]in/
+[Oo]bj/
+Debug/
+Release/
+Retail/
+x64/
+
+# Compiler intermediates
+*.pch
+*.obj
+*.lib
+*.exp
+*.ilk
+*.ipdb
+*.iobj
+*.pdb
+
+# MSVC incremental-build bookkeeping (paths inside these can embed the local
+# machine's absolute build path, e.g. C:\Users\<name>\...  -- never track them)
+*.tlog
+*.lastbuildstate
+unsuccessfulbuild
+*.FileListAbsolute.txt
+
+# Optional
+audio_samples/
+# Build logs / scratch (can embed local absolute paths, e.g. C:\Users\<name>\...)
+build_log_*.txt
+*.log
+neo/preprocessed.xml
+*.vcxproj.tmp

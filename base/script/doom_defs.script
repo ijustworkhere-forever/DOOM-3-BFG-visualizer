@@ -1,0 +1,6 @@
+/*
+Minimal doom_defs.script for dataless visualizer boot.
+The script compiler implicitly #includes this file into every compiled script
+(SCRIPT_DEFAULTDEFS, neo/d3xp/Game.h). The retail file declares hundreds of
+constants and scriptEvent prototypes; nothing here needs them yet.
+*/
